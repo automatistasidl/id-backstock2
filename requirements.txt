@@ -6,3 +6,6 @@ streamlit-javascript
 XlsxWriter
 openpyxl
 pytz
+gspread
+google-auth
+gspread-dataframe
