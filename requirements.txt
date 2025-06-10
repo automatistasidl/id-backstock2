@@ -1,1 +1,8 @@
+pygsheets
+streamlit-option-menu
 streamlit
+pandas
+streamlit-javascript
+XlsxWriter
+openpyxl
+pytz
