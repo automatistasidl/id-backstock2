@@ -337,6 +337,6 @@ elif selecao == "Visualizar Planilha":
 
 st.markdown("""
     <div class="footer">
-        Copyright © 2025 Direitos Autorais Desenvolvedor Rogério Ferreira
+        Copyright © 2025 Direitos Autorais Desenvolvedores Rogério Ferreira e Kauê Oliveira
     </div>
 """, unsafe_allow_html=True)
