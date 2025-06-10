@@ -28,6 +28,19 @@ def get_google_sheet():
     spreadsheet = client.open_by_key(SPREADSHEET_KEY)
     return spreadsheet
 
+@st.cache_data(ttl=120, show_spinner="Carregando registros da planilha...")
+def load_backstock_data():
+    try:
+        sheet = get_google_sheet().worksheet(SHEET_NAME)
+        data = sheet.get_all_records()
+        if data:
+            return pd.DataFrame(data)
+        else:
+            return pd.DataFrame()
+    except Exception as e:
+        st.error(f"Erro ao carregar dados da planilha: {e}")
+        return pd.DataFrame()
+
 def salvar_bulto_na_planilha(df_bulto):
     try:
         spreadsheet = get_google_sheet()
@@ -36,11 +49,9 @@ def salvar_bulto_na_planilha(df_bulto):
         except gspread.WorksheetNotFound:
             sheet = spreadsheet.add_worksheet(title=SHEET_NAME, rows="1000", cols="20")
             sheet.append_row(list(df_bulto.columns))  # Cabeçalho
-        # Se for a primeira linha, talvez precise garantir o cabeçalho
         existing_rows = sheet.get_all_values()
         if not existing_rows:
             sheet.append_row(list(df_bulto.columns))
-        # Adiciona registros (exceto cabeçalho)
         rows = df_bulto.values.tolist()
         for row in rows:
             sheet.append_row(row)
@@ -49,7 +60,6 @@ def salvar_bulto_na_planilha(df_bulto):
         st.error(f"Erro ao salvar na planilha: {e}")
         return False
 
-# --- RESTANTE DO APP ---
 def hora_brasil():
     fuso_brasil = pytz.timezone('America/Sao_Paulo')
     return datetime.now(fuso_brasil).strftime("%d/%m/%Y %H:%M:%S")
@@ -177,8 +187,8 @@ if not st.session_state["user_code"]:
 
 selecao = option_menu(
     menu_title="BACKSTOCK",
-    options=["Cadastro Bulto", "Tabela", "Home"],
-    icons=["box", "table", "house"],
+    options=["Cadastro Bulto", "Tabela", "Visualizar Planilha", "Home"],
+    icons=["box", "table", "eye", "house"],
     menu_icon="cast",
     orientation="horizontal"
 )
@@ -273,6 +283,57 @@ elif selecao == "Tabela":
             st.rerun()
     else:
         st.info("Nenhuma peça cadastrada até o momento.")
+
+elif selecao == "Visualizar Planilha":
+    st.header("📋 Visualização dos Registros da Planilha Backstock")
+    if st.button("🔄 Atualizar Dados da Planilha"):
+        load_backstock_data.clear()
+        st.toast("Dados da planilha atualizados!", icon="🔄")
+    df = load_backstock_data()
+    if not df.empty:
+        df = df.sort_values("Data/Hora", ascending=False)
+        # Filtros
+        st.subheader("Filtros")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            setor_filtro = st.selectbox("Bulto:", ["Todos"] + sorted(df['Bulto'].unique()))
+        with col2:
+            categoria_filtro = st.selectbox("Categoria:", ["Todas"] + sorted(df['Categoria'].unique()))
+        with col3:
+            usuario_filtro = st.selectbox("Usuário:", ["Todos"] + sorted(df['Usuário'].unique()))
+        with col4:
+            data_filtro = st.date_input("Data:", datetime.now())
+        # Aplicar filtros
+        if setor_filtro != "Todos":
+            df = df[df['Bulto'] == setor_filtro]
+        if categoria_filtro != "Todas":
+            df = df[df['Categoria'] == categoria_filtro]
+        if usuario_filtro != "Todos":
+            df = df[df['Usuário'] == usuario_filtro]
+        if data_filtro:
+            df = df[pd.to_datetime(df['Data/Hora'], dayfirst=True).dt.date == data_filtro]
+        st.dataframe(df, use_container_width=True)
+        # Estatísticas
+        st.subheader("📊 Estatísticas")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total de Registros", len(df))
+        with col2:
+            st.metric("Bultos Diferentes", df['Bulto'].nunique())
+        with col3:
+            st.metric("Categorias", df['Categoria'].nunique())
+        with col4:
+            st.metric("Usuários", df['Usuário'].nunique())
+        # Gráficos
+        tab1, tab2, tab3 = st.tabs(["Bultos", "Categorias", "Usuários"])
+        with tab1:
+            st.bar_chart(df['Bulto'].value_counts())
+        with tab2:
+            st.bar_chart(df['Categoria'].value_counts())
+        with tab3:
+            st.bar_chart(df['Usuário'].value_counts().head(5))
+    else:
+        st.info("Nenhum registro encontrado na planilha.")
 
 st.markdown("""
     <div class="footer">
