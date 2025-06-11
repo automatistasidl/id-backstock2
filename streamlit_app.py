@@ -292,16 +292,26 @@ elif selecao == "Visualizar Planilha":
         st.toast("Dados da planilha atualizados!", icon="🔄")
     df = load_backstock_data()
     if not df.empty:
-        df = df.sort_values("Data/Hora", ascending=False)
+        # Garante leitura dos campos como texto (preserva zeros à esquerda)
+        for col in ["Bulto", "SKU"]:
+            if col in df.columns:
+                df[col] = df[col].astype(str)
+        # Tratamento da Data/Hora
+        if "Data/Hora" in df.columns:
+            df["Data/Hora"] = df["Data/Hora"].astype(str)
+            df = df[df["Data/Hora"].str.len() > 5]
+            df["Data/Hora_dt"] = pd.to_datetime(df["Data/Hora"], dayfirst=True, errors="coerce")
+            df = df[~df["Data/Hora_dt"].isna()]
+            df = df.sort_values("Data/Hora_dt", ascending=False)
         # Filtros
         st.subheader("Filtros")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            setor_filtro = st.selectbox("Bulto:", ["Todos"] + sorted(df['Bulto'].unique()))
+            setor_filtro = st.selectbox("Bulto:", ["Todos"] + sorted(df['Bulto'].dropna().unique()))
         with col2:
-            categoria_filtro = st.selectbox("Categoria:", ["Todas"] + sorted(df['Categoria'].unique()))
+            categoria_filtro = st.selectbox("Categoria:", ["Todas"] + sorted(df['Categoria'].dropna().unique()))
         with col3:
-            usuario_filtro = st.selectbox("Usuário:", ["Todos"] + sorted(df['Usuário'].unique()))
+            usuario_filtro = st.selectbox("Usuário:", ["Todos"] + sorted(df['Usuário'].dropna().unique()))
         with col4:
             data_filtro = st.date_input("Data:", datetime.now())
         # Aplicar filtros
@@ -312,7 +322,7 @@ elif selecao == "Visualizar Planilha":
         if usuario_filtro != "Todos":
             df = df[df['Usuário'] == usuario_filtro]
         if data_filtro:
-            df = df[pd.to_datetime(df['Data/Hora'], dayfirst=True).dt.date == data_filtro]
+            df = df[pd.to_datetime(df['Data/Hora'], dayfirst=True, errors="coerce").dt.date == data_filtro]
         st.dataframe(df, use_container_width=True)
         # Estatísticas
         st.subheader("📊 Estatísticas")
