@@ -261,6 +261,7 @@ if selecao == "Cadastro Bulto":
                     sucesso = salvar_bulto_na_planilha(df_cadastros)
                     if sucesso:
                         st.success("✅ Bulto finalizado e salvo na planilha com sucesso!")
+                        st.session_state["cadastros"] = []
                     else:
                         st.error("❌ Erro ao salvar o bulto na planilha.")
                 else:
