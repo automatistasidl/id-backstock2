@@ -253,24 +253,39 @@ if selecao == "Cadastro Bulto":
             st.success(f"Peça '{sku}' cadastrada com sucesso!")
             st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + 1
             st.rerun()
-        if st.button("✅ Finalizar Bulto", key="finalizar_bulto", use_container_width=True, type="primary"):
-            if st.session_state.get("peca_reset_count", 0) > 0:
-                bulto_atual = st.session_state["bulto_numero"]
-                df_cadastros = pd.DataFrame([c for c in st.session_state["cadastros"] if c["Bulto"] == bulto_atual])
-                if not df_cadastros.empty:
-                    sucesso = salvar_bulto_na_planilha(df_cadastros)
-                    if sucesso:
-                        st.success("✅ Bulto finalizado e salvo na planilha com sucesso!")
-                        st.session_state["cadastros"] = []
+
+        # BLOCO PARA EVITAR DUPLICIDADE NO FINALIZAR BULTOS + SPINNER
+        if "finalizar_bulto_disabled" not in st.session_state:
+            st.session_state["finalizar_bulto_disabled"] = False
+
+        finalizar_btn = st.button(
+            "✅ Finalizar Bulto",
+            key="finalizar_bulto",
+            use_container_width=True,
+            type="primary",
+            disabled=st.session_state["finalizar_bulto_disabled"]
+        )
+        if finalizar_btn:
+            st.session_state["finalizar_bulto_disabled"] = True
+            with st.spinner("Salvando bulto na planilha, aguarde..."):
+                if st.session_state.get("peca_reset_count", 0) > 0:
+                    bulto_atual = st.session_state["bulto_numero"]
+                    df_cadastros = pd.DataFrame([c for c in st.session_state["cadastros"] if c["Bulto"] == bulto_atual])
+                    if not df_cadastros.empty:
+                        sucesso = salvar_bulto_na_planilha(df_cadastros)
+                        if sucesso:
+                            st.success("✅ Bulto finalizado e salvo na planilha com sucesso!")
+                            st.session_state["cadastros"] = []
+                        else:
+                            st.error("❌ Erro ao salvar o bulto na planilha.")
                     else:
-                        st.error("❌ Erro ao salvar o bulto na planilha.")
+                        st.warning("⚠️ Nenhuma peça cadastrada neste bulto para envio.")
                 else:
-                    st.warning("⚠️ Nenhuma peça cadastrada neste bulto para envio.")
-            else:
-                st.warning("⚠️ Nenhuma peça cadastrada neste bulto.")
+                    st.warning("⚠️ Nenhuma peça cadastrada neste bulto.")
             st.session_state["bulto_cadastrado"] = False
             st.session_state["peca_reset_count"] = 0
             st.session_state.etapa = "bulto"
+            st.session_state["finalizar_bulto_disabled"] = False  # Libera botão pro próximo ciclo
             st.rerun()
 
 elif selecao == "Tabela":
