@@ -254,7 +254,7 @@ if selecao == "Cadastro Bulto":
             st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + 1
             st.rerun()
 
-        # BLOCO PARA EVITAR DUPLICIDADE NO FINALIZAR BULTOS + SPINNER
+        # Proteção anti-duplo clique com spinner
         if "finalizar_bulto_disabled" not in st.session_state:
             st.session_state["finalizar_bulto_disabled"] = False
 
@@ -265,8 +265,13 @@ if selecao == "Cadastro Bulto":
             type="primary",
             disabled=st.session_state["finalizar_bulto_disabled"]
         )
-        if finalizar_btn:
+        # Se o botão for pressionado e ainda não estava desabilitado, desabilita e reroda imediatamente
+        if finalizar_btn and not st.session_state["finalizar_bulto_disabled"]:
             st.session_state["finalizar_bulto_disabled"] = True
+            st.experimental_rerun()
+
+        # Quando o botão está desabilitado, faz o processamento com spinner
+        if st.session_state.get("finalizar_bulto_disabled", False) and not finalizar_btn:
             with st.spinner("Salvando bulto na planilha, aguarde..."):
                 if st.session_state.get("peca_reset_count", 0) > 0:
                     bulto_atual = st.session_state["bulto_numero"]
@@ -282,11 +287,11 @@ if selecao == "Cadastro Bulto":
                         st.warning("⚠️ Nenhuma peça cadastrada neste bulto para envio.")
                 else:
                     st.warning("⚠️ Nenhuma peça cadastrada neste bulto.")
-            st.session_state["bulto_cadastrado"] = False
-            st.session_state["peca_reset_count"] = 0
-            st.session_state.etapa = "bulto"
-            st.session_state["finalizar_bulto_disabled"] = False  # Libera botão pro próximo ciclo
-            st.rerun()
+                st.session_state["bulto_cadastrado"] = False
+                st.session_state["peca_reset_count"] = 0
+                st.session_state.etapa = "bulto"
+                st.session_state["finalizar_bulto_disabled"] = False
+                st.experimental_rerun()
 
 elif selecao == "Tabela":
     st.markdown("<h1 style='color:black; text-align: center;'>Tabela de Peças Cadastradas</h1>", unsafe_allow_html=True)
