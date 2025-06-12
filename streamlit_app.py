@@ -365,4 +365,4 @@ st.markdown("""
     <div class="footer">
         Copyright © 2025 Direitos Autorais Desenvolvedores Rogério Ferreira e Kauê Oliveira
     </div>
-""", unsafe_allow_html=True
+""", unsafe_allow_html=True)
