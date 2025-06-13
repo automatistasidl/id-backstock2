@@ -215,6 +215,7 @@ if selecao == "Sair":
     st.rerun()
 
 if selecao == "Cadastro Bulto":
+    # Libera o botão só quando entra na tela de SKU de um novo bulto/categoria
     if (
         "finalizar_bulto_disabled" not in st.session_state
         or st.session_state.get("reset_finalizar_bulto", False)
@@ -278,6 +279,7 @@ if selecao == "Cadastro Bulto":
             st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + 1
             st.rerun()
 
+        # ------- FINALIZAR BULTOS: proteção antiduplo clique --------
         def bloquear_finalizar_bulto():
             st.session_state["finalizar_bulto_disabled"] = True
             st.session_state["finalizar_bulto_aguardando"] = True
@@ -313,7 +315,7 @@ if selecao == "Cadastro Bulto":
                 st.session_state["peca_reset_count"] = 0
                 st.session_state.etapa = "bulto"
                 st.session_state["finalizar_bulto_aguardando"] = False
-                st.experimental_rerun()
+                st.stop()
 
 elif selecao == "Tabela":
     st.markdown("<h1 style='color:black; text-align: center;'>Tabela de Peças Cadastradas</h1>", unsafe_allow_html=True)
