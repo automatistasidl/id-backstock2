@@ -90,6 +90,7 @@ if "etapa" not in st.session_state:
 
 st.set_page_config(layout="wide")
 
+# ------ ID LOGISTICS DESIGN: CUSTOM CSS ------
 st.markdown("""
     <style>
         .css-1omjdxh { color: white !important; }
@@ -113,16 +114,41 @@ st.markdown("""
             border: 3px solid #4A90E2 !important;
             box-shadow: 0 0 10px #4A90E2 !important;
         }
-        .enviando-msg {
-            background-color:#FFD700;
-            color:#d80000;
-            padding:30px;
-            text-align:center;
-            font-size:2em;
-            font-weight:bold;
-            border-radius:10px;
-            margin:20px 0 20px 0;
-            border: 5px solid #d80000;
+        .enviando-msg-idlog {
+            background: linear-gradient(90deg, #003366 0%, #ffffff 60%, #d52b1e 100%);
+            color: #003366;
+            border-radius: 12px;
+            border: 4px solid #003366;
+            font-size: 2.2em;
+            font-weight: bold;
+            text-align: center;
+            padding: 40px 18px 40px 18px;
+            margin: 30px 0 30px 0;
+            box-shadow: 0 4px 18px 0 rgba(0,0,0,0.07);
+            letter-spacing: 2px;
+            position: relative;
+        }
+        .enviando-msg-idlog::before {
+            content: '';
+            display: inline-block;
+            background: url('https://www.id-logistics.com/wp-content/themes/idl-theme/assets/img/logo-id-logistics.svg') no-repeat center/90px;
+            width: 90px;
+            height: 36px;
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        @media (max-width: 600px) {
+            .enviando-msg-idlog {
+                font-size: 1.4em;
+                padding: 24px 8px;
+            }
+            .enviando-msg-idlog::before {
+                width: 60px;
+                height: 24px;
+                top: 10px;
+            }
         }
     </style>
 """, unsafe_allow_html=True)
@@ -307,9 +333,9 @@ if selecao == "Cadastro Bulto":
         )
 
         if st.session_state.get("finalizar_bulto_aguardando", False):
-            st.markdown('<div class="enviando-msg">ENVIANDO...</div>', unsafe_allow_html=True)
+            st.markdown('<div class="enviando-msg-idlog">Finalizando Bulto...<br>Por favor, aguarde!</div>', unsafe_allow_html=True)
             with st.spinner("Salvando bulto na planilha, aguarde..."):
-                time.sleep(0.7)  # Para garantir visualização da mensagem
+                time.sleep(0.7)
                 if st.session_state.get("peca_reset_count", 0) > 0:
                     bulto_atual = st.session_state["bulto_numero"]
                     df_cadastros = pd.DataFrame([c for c in st.session_state["cadastros"] if c["Bulto"] == bulto_atual])
