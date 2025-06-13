@@ -178,7 +178,12 @@ if "user_code" not in st.session_state or not st.session_state["user_code"]:
 
 if not st.session_state["user_code"]:
     st.title("Cadastro Obrigatório para continuar o acesso")
-    codigo_usuario = st.text_input("Digite seu código de acesso:", key="user_input", placeholder="Digite seu código de acesso...")
+    codigo_usuario = st.text_input(
+        "Código de acesso", 
+        key="user_input", 
+        placeholder="Digite seu código de acesso...",
+        label_visibility="collapsed"
+    )
     auto_focus_input("Digite seu código de acesso...")
     if codigo_usuario.strip():
         with st.spinner("Validando código..."):
@@ -227,7 +232,12 @@ if selecao == "Cadastro Bulto":
     if st.session_state.etapa == "bulto":
         st.markdown("<h1 style='color:black; text-align: center;'>Cadastro de Bultos</h1>", unsafe_allow_html=True)
         st.markdown("<h2 style='color:black; text-align: center;'>Digite o número do bulto</h2>", unsafe_allow_html=True)
-        bulto = st.text_input("", key="bulto_input", placeholder="Digite o número do bulto...")
+        bulto = st.text_input(
+            "Número do bulto", 
+            key="bulto_input", 
+            placeholder="Digite o número do bulto...",
+            label_visibility="collapsed"
+        )
         auto_focus_input()
         if bulto:
             st.session_state["bulto_numero"] = bulto
@@ -263,7 +273,12 @@ if selecao == "Cadastro Bulto":
             st.session_state.etapa = "categoria"
             st.rerun()
         unique_key = f"sku_input_{st.session_state.get('peca_reset_count', 0)}"
-        sku = st.text_input("Digite o SKU:", key=unique_key, placeholder="Bipe o SKU e pressione Enter...")
+        sku = st.text_input(
+            "SKU", 
+            key=unique_key, 
+            placeholder="Bipe o SKU e pressione Enter...",
+            label_visibility="collapsed"
+        )
         auto_focus_input()
         if sku:
             novo_cadastro = {
@@ -313,7 +328,7 @@ if selecao == "Cadastro Bulto":
                 st.session_state["peca_reset_count"] = 0
                 st.session_state.etapa = "bulto"
                 st.session_state["finalizar_bulto_aguardando"] = False
-            st.experimental_rerun()
+            st.rerun()
 
 elif selecao == "Tabela":
     st.markdown("<h1 style='color:black; text-align: center;'>Tabela de Peças Cadastradas</h1>", unsafe_allow_html=True)
