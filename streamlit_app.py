@@ -187,13 +187,13 @@ if not st.session_state["user_code"]:
 
 selecao = option_menu(
     menu_title="BACKSTOCK",
-    options=["Cadastro Bulto", "Tabela", "Visualizar Planilha", "Home"],
+    options=["Cadastro Bulto", "Tabela", "Visualizar Planilha", "Sair"],
     icons=["box", "table", "eye", "house"],
     menu_icon="cast",
     orientation="horizontal"
 )
 
-if selecao == "Home":
+if selecao == "Sair":
     st.session_state["inicio"] = False
     st.session_state["user_code"] = ""
     st.session_state["user_name"] = ""
