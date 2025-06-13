@@ -211,6 +211,7 @@ if selecao == "Sair":
     st.session_state["bulto_cadastrado"] = False
     st.session_state.etapa = "bulto"
     st.session_state["finalizar_bulto_disabled"] = False
+    st.session_state["finalizar_bulto_aguardando"] = False
     st.rerun()
 
 if selecao == "Cadastro Bulto":
@@ -221,6 +222,8 @@ if selecao == "Cadastro Bulto":
     ):
         st.session_state["finalizar_bulto_disabled"] = False
         st.session_state["reset_finalizar_bulto"] = False
+    if "finalizar_bulto_aguardando" not in st.session_state:
+        st.session_state["finalizar_bulto_aguardando"] = False
 
     if st.session_state.etapa == "bulto":
         st.markdown("<h1 style='color:black; text-align: center;'>Cadastro de Bultos</h1>", unsafe_allow_html=True)
@@ -276,9 +279,6 @@ if selecao == "Cadastro Bulto":
             st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + 1
             st.rerun()
 
-        if st.session_state.get("finalizar_bulto_disabled", False):
-            st.markdown('<div class="enviando-msg">ENVIANDO...</div>', unsafe_allow_html=True)
-
         finalizar_btn = st.button(
             "✅ Finalizar Bulto",
             key="finalizar_bulto",
@@ -286,13 +286,16 @@ if selecao == "Cadastro Bulto":
             type="primary",
             disabled=st.session_state["finalizar_bulto_disabled"]
         )
-        # BLOQUEIO IMEDIATO AO CLICAR
+
+        # BLOQUEIO IMEDIATO + MENSAGEM ENVIANDO E PROCESSAMENTO
         if finalizar_btn and not st.session_state["finalizar_bulto_disabled"]:
             st.session_state["finalizar_bulto_disabled"] = True
-            st.experimental_rerun()
-        # PROCESSAMENTO DE FINALIZAÇÃO
-        if st.session_state.get("finalizar_bulto_disabled", False) and not finalizar_btn:
+            st.session_state["finalizar_bulto_aguardando"] = True
+
+        if st.session_state.get("finalizar_bulto_aguardando", False):
+            st.markdown('<div class="enviando-msg">ENVIANDO...</div>', unsafe_allow_html=True)
             with st.spinner("Salvando bulto na planilha, aguarde..."):
+                time.sleep(0.7)  # Para garantir visualização da mensagem
                 if st.session_state.get("peca_reset_count", 0) > 0:
                     bulto_atual = st.session_state["bulto_numero"]
                     df_cadastros = pd.DataFrame([c for c in st.session_state["cadastros"] if c["Bulto"] == bulto_atual])
@@ -310,8 +313,8 @@ if selecao == "Cadastro Bulto":
                 st.session_state["bulto_cadastrado"] = False
                 st.session_state["peca_reset_count"] = 0
                 st.session_state.etapa = "bulto"
-                # NÃO libera o botão aqui!
-                st.rerun()
+                st.session_state["finalizar_bulto_aguardando"] = False
+                st.stop()
 
 elif selecao == "Tabela":
     st.markdown("<h1 style='color:black; text-align: center;'>Tabela de Peças Cadastradas</h1>", unsafe_allow_html=True)
