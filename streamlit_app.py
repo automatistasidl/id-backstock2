@@ -214,8 +214,11 @@ if selecao == "Sair":
     st.rerun()
 
 if selecao == "Cadastro Bulto":
-    # Libera o botão só quando entra na tela de SKU
-    if "finalizar_bulto_disabled" not in st.session_state or st.session_state.get("reset_finalizar_bulto", False):
+    # Libera o botão só quando entra na tela de SKU de um novo bulto/categoria
+    if (
+        "finalizar_bulto_disabled" not in st.session_state
+        or st.session_state.get("reset_finalizar_bulto", False)
+    ):
         st.session_state["finalizar_bulto_disabled"] = False
         st.session_state["reset_finalizar_bulto"] = False
 
@@ -283,10 +286,11 @@ if selecao == "Cadastro Bulto":
             type="primary",
             disabled=st.session_state["finalizar_bulto_disabled"]
         )
+        # BLOQUEIO IMEDIATO AO CLICAR
         if finalizar_btn and not st.session_state["finalizar_bulto_disabled"]:
             st.session_state["finalizar_bulto_disabled"] = True
             st.experimental_rerun()
-
+        # PROCESSAMENTO DE FINALIZAÇÃO
         if st.session_state.get("finalizar_bulto_disabled", False) and not finalizar_btn:
             with st.spinner("Salvando bulto na planilha, aguarde..."):
                 if st.session_state.get("peca_reset_count", 0) > 0:
