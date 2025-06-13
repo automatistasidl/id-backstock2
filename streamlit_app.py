@@ -113,6 +113,17 @@ st.markdown("""
             border: 3px solid #4A90E2 !important;
             box-shadow: 0 0 10px #4A90E2 !important;
         }
+        .enviando-msg {
+            background-color:#FFD700;
+            color:#d80000;
+            padding:30px;
+            text-align:center;
+            font-size:2em;
+            font-weight:bold;
+            border-radius:10px;
+            margin:20px 0 20px 0;
+            border: 5px solid #d80000;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -199,9 +210,15 @@ if selecao == "Sair":
     st.session_state["user_name"] = ""
     st.session_state["bulto_cadastrado"] = False
     st.session_state.etapa = "bulto"
+    st.session_state["finalizar_bulto_disabled"] = False
     st.rerun()
 
 if selecao == "Cadastro Bulto":
+    # Libera o botão só quando entra na tela de SKU
+    if "finalizar_bulto_disabled" not in st.session_state or st.session_state.get("reset_finalizar_bulto", False):
+        st.session_state["finalizar_bulto_disabled"] = False
+        st.session_state["reset_finalizar_bulto"] = False
+
     if st.session_state.etapa == "bulto":
         st.markdown("<h1 style='color:black; text-align: center;'>Cadastro de Bultos</h1>", unsafe_allow_html=True)
         st.markdown("<h2 style='color:black; text-align: center;'>Digite o número do bulto</h2>", unsafe_allow_html=True)
@@ -212,6 +229,7 @@ if selecao == "Cadastro Bulto":
             st.session_state["bulto_cadastrado"] = True
             st.session_state.etapa = "categoria"
             st.session_state["peca_reset_count"] = 0
+            st.session_state["reset_finalizar_bulto"] = True
             st.rerun()
     elif st.session_state.etapa == "categoria":
         st.markdown("<h1 style='color:black; text-align: center;'>Selecione a Categoria</h1>", unsafe_allow_html=True)
@@ -224,6 +242,7 @@ if selecao == "Cadastro Bulto":
                 if st.button(categoria, key=f"cat_{categoria}", use_container_width=True):
                     st.session_state["categoria_selecionada"] = categoria
                     st.session_state.etapa = "sku"
+                    st.session_state["reset_finalizar_bulto"] = True
                     st.rerun()
     elif st.session_state.etapa == "sku":
         st.markdown("<h1 style='color:black; text-align: center;'>Cadastro de Peças</h1>", unsafe_allow_html=True)
@@ -253,25 +272,42 @@ if selecao == "Cadastro Bulto":
             st.success(f"Peça '{sku}' cadastrada com sucesso!")
             st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + 1
             st.rerun()
-        if st.button("✅ Finalizar Bulto", key="finalizar_bulto", use_container_width=True, type="primary"):
-            if st.session_state.get("peca_reset_count", 0) > 0:
-                bulto_atual = st.session_state["bulto_numero"]
-                df_cadastros = pd.DataFrame([c for c in st.session_state["cadastros"] if c["Bulto"] == bulto_atual])
-                if not df_cadastros.empty:
-                    sucesso = salvar_bulto_na_planilha(df_cadastros)
-                    if sucesso:
-                        st.success("✅ Bulto finalizado e salvo na planilha com sucesso!")
-                        st.session_state["cadastros"] = []
+
+        if st.session_state.get("finalizar_bulto_disabled", False):
+            st.markdown('<div class="enviando-msg">ENVIANDO...</div>', unsafe_allow_html=True)
+
+        finalizar_btn = st.button(
+            "✅ Finalizar Bulto",
+            key="finalizar_bulto",
+            use_container_width=True,
+            type="primary",
+            disabled=st.session_state["finalizar_bulto_disabled"]
+        )
+        if finalizar_btn and not st.session_state["finalizar_bulto_disabled"]:
+            st.session_state["finalizar_bulto_disabled"] = True
+            st.experimental_rerun()
+
+        if st.session_state.get("finalizar_bulto_disabled", False) and not finalizar_btn:
+            with st.spinner("Salvando bulto na planilha, aguarde..."):
+                if st.session_state.get("peca_reset_count", 0) > 0:
+                    bulto_atual = st.session_state["bulto_numero"]
+                    df_cadastros = pd.DataFrame([c for c in st.session_state["cadastros"] if c["Bulto"] == bulto_atual])
+                    if not df_cadastros.empty:
+                        sucesso = salvar_bulto_na_planilha(df_cadastros)
+                        if sucesso:
+                            st.success("✅ Bulto finalizado e salvo na planilha com sucesso!")
+                            st.session_state["cadastros"] = []
+                        else:
+                            st.error("❌ Erro ao salvar o bulto na planilha.")
                     else:
-                        st.error("❌ Erro ao salvar o bulto na planilha.")
+                        st.warning("⚠️ Nenhuma peça cadastrada neste bulto para envio.")
                 else:
-                    st.warning("⚠️ Nenhuma peça cadastrada neste bulto para envio.")
-            else:
-                st.warning("⚠️ Nenhuma peça cadastrada neste bulto.")
-            st.session_state["bulto_cadastrado"] = False
-            st.session_state["peca_reset_count"] = 0
-            st.session_state.etapa = "bulto"
-            st.rerun()
+                    st.warning("⚠️ Nenhuma peça cadastrada neste bulto.")
+                st.session_state["bulto_cadastrado"] = False
+                st.session_state["peca_reset_count"] = 0
+                st.session_state.etapa = "bulto"
+                # NÃO libera o botão aqui!
+                st.rerun()
 
 elif selecao == "Tabela":
     st.markdown("<h1 style='color:black; text-align: center;'>Tabela de Peças Cadastradas</h1>", unsafe_allow_html=True)
@@ -292,18 +328,15 @@ elif selecao == "Visualizar Planilha":
         st.toast("Dados da planilha atualizados!", icon="🔄")
     df = load_backstock_data()
     if not df.empty:
-        # Garante leitura dos campos como texto (preserva zeros à esquerda)
         for col in ["Bulto", "SKU"]:
             if col in df.columns:
                 df[col] = df[col].astype(str)
-        # Tratamento da Data/Hora
         if "Data/Hora" in df.columns:
             df["Data/Hora"] = df["Data/Hora"].astype(str)
             df = df[df["Data/Hora"].str.len() > 5]
             df["Data/Hora_dt"] = pd.to_datetime(df["Data/Hora"], dayfirst=True, errors="coerce")
             df = df[~df["Data/Hora_dt"].isna()]
             df = df.sort_values("Data/Hora_dt", ascending=False)
-        # Filtros
         st.subheader("Filtros")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -314,7 +347,6 @@ elif selecao == "Visualizar Planilha":
             usuario_filtro = st.selectbox("Usuário:", ["Todos"] + sorted(df['Usuário'].dropna().unique()))
         with col4:
             data_filtro = st.date_input("Data:", datetime.now())
-        # Aplicar filtros
         if setor_filtro != "Todos":
             df = df[df['Bulto'] == setor_filtro]
         if categoria_filtro != "Todas":
@@ -324,7 +356,6 @@ elif selecao == "Visualizar Planilha":
         if data_filtro:
             df = df[pd.to_datetime(df['Data/Hora'], dayfirst=True, errors="coerce").dt.date == data_filtro]
         st.dataframe(df, use_container_width=True)
-        # Estatísticas
         st.subheader("📊 Estatísticas")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -335,7 +366,6 @@ elif selecao == "Visualizar Planilha":
             st.metric("Categorias", df['Categoria'].nunique())
         with col4:
             st.metric("Usuários", df['Usuário'].nunique())
-        # Gráficos
         tab1, tab2, tab3 = st.tabs(["Bultos", "Categorias", "Usuários"])
         with tab1:
             st.bar_chart(df['Bulto'].value_counts())
