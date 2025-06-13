@@ -279,18 +279,19 @@ if selecao == "Cadastro Bulto":
             st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + 1
             st.rerun()
 
-        finalizar_btn = st.button(
+        # ------- FINALIZAR BULTOS: proteção antiduplo clique --------
+        def bloquear_finalizar_bulto():
+            st.session_state["finalizar_bulto_disabled"] = True
+            st.session_state["finalizar_bulto_aguardando"] = True
+
+        st.button(
             "✅ Finalizar Bulto",
             key="finalizar_bulto",
             use_container_width=True,
             type="primary",
-            disabled=st.session_state["finalizar_bulto_disabled"]
+            disabled=st.session_state["finalizar_bulto_disabled"],
+            on_click=bloquear_finalizar_bulto
         )
-
-        # BLOQUEIO IMEDIATO + MENSAGEM ENVIANDO E PROCESSAMENTO
-        if finalizar_btn and not st.session_state["finalizar_bulto_disabled"]:
-            st.session_state["finalizar_bulto_disabled"] = True
-            st.session_state["finalizar_bulto_aguardando"] = True
 
         if st.session_state.get("finalizar_bulto_aguardando", False):
             st.markdown('<div class="enviando-msg">ENVIANDO...</div>', unsafe_allow_html=True)
