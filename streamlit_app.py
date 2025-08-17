@@ -281,8 +281,8 @@ if selecao == "Cadastro Bulto":
         categorias = [
             "Ubicação",
             "Reetiquetagem",
-            "Tara maior - Não recuperável",
-            "Tara maior - sem SKU Interno",
+            "Tara maior - não recuperável",
+            "Tara maior - sem SKU interno",
             "Costura",
             "Limpeza"
         ]
