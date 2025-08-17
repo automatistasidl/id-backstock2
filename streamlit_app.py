@@ -391,7 +391,7 @@ if selecao == "Cadastro Bulto":
             )
             auto_focus_input("Digite a quantidade de peças...")
 
-            # NÃO avança automaticamente. Só cadastra no botão!
+            # Botão padrão para cadastrar quantidade SEM SKU INTERNO
             if st.button("Cadastrar Quantidade", key="cadastrar_quantidade", use_container_width=True, disabled=not (quantidade and quantidade > 0)):
                 novo_cadastro = {
                     "Usuário": st.session_state["user_name"],
@@ -406,6 +406,52 @@ if selecao == "Cadastro Bulto":
                 st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + int(quantidade)
                 st.rerun()
 
+            # NOVO BOTÃO: Finalizar bulto com SKU '3000000000000'
+            def bloquear_finalizar_bulto_tara_maior():
+                st.session_state["finalizar_bulto_disabled"] = True
+                st.session_state["finalizar_bulto_aguardando_3000000000000"] = True
+
+            st.button(
+                "✅ Finalizar Bulto (SKU: 3000000000000)",
+                key="finalizar_bulto_sku_3000000000000",
+                use_container_width=True,
+                type="primary",
+                disabled=st.session_state.get("finalizar_bulto_disabled", False),
+                on_click=bloquear_finalizar_bulto_tara_maior
+            )
+
+            # Fluxo para finalizar bulto com SKU '3000000000000'
+            if st.session_state.get("finalizar_bulto_aguardando_3000000000000", False):
+                st.markdown('<div class="enviando-msg-idlog">Finalizando Bulto com SKU 3000000000000...<br>Por favor, aguarde!</div>', unsafe_allow_html=True)
+                with st.spinner("Salvando bulto na planilha, aguarde..."):
+                    time.sleep(0.7)
+                    if quantidade and quantidade > 0:
+                        bulto_atual = st.session_state["bulto_numero"]
+                        cadastro_3000000000000 = {
+                            "Usuário": st.session_state["user_name"],
+                            "Bulto": bulto_atual,
+                            "SKU": "3000000000000",
+                            "Categoria": st.session_state["categoria_selecionada"],
+                            "Quantidade": int(quantidade),
+                            "Data/Hora": hora_brasil()
+                        }
+                        df_cadastros = pd.DataFrame([cadastro_3000000000000])
+                        sucesso = salvar_bulto_na_planilha(df_cadastros)
+                        if sucesso:
+                            st.success("✅ Bulto finalizado e salvo na planilha com SKU 3000000000000!")
+                            st.session_state["cadastros"] = []
+                        else:
+                            st.error("❌ Erro ao salvar o bulto na planilha.")
+                    else:
+                        st.warning("⚠️ Nenhuma quantidade informada para envio.")
+                    st.session_state["bulto_cadastrado"] = False
+                    st.session_state["peca_reset_count"] = 0
+                    st.session_state.etapa = "bulto"
+                    st.session_state["finalizar_bulto_aguardando_3000000000000"] = False
+                    st.session_state["finalizar_bulto_disabled"] = False
+                st.rerun()
+
+            # Finalizar bulto padrão (SEM SKU INTERNO) permanece igual
             def bloquear_finalizar_bulto_qtd():
                 st.session_state["finalizar_bulto_disabled"] = True
                 st.session_state["finalizar_bulto_aguardando"] = True
@@ -415,7 +461,7 @@ if selecao == "Cadastro Bulto":
                 key="finalizar_bulto_qtd",
                 use_container_width=True,
                 type="primary",
-                disabled=st.session_state["finalizar_bulto_disabled"],
+                disabled=st.session_state.get("finalizar_bulto_disabled", False),
                 on_click=bloquear_finalizar_bulto_qtd
             )
 
