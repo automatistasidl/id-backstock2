@@ -406,7 +406,7 @@ if selecao == "Cadastro Bulto":
                 st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + int(quantidade)
                 st.rerun()
 
-            # NOVO BOTÃO: Finalizar bulto com SKU '3000000000000'
+            # NOVO BOTÃO: Finalizar bulto com SKU '3000000000000', cada linha separada
             def bloquear_finalizar_bulto_tara_maior():
                 st.session_state["finalizar_bulto_disabled"] = True
                 st.session_state["finalizar_bulto_aguardando_3000000000000"] = True
@@ -420,25 +420,28 @@ if selecao == "Cadastro Bulto":
                 on_click=bloquear_finalizar_bulto_tara_maior
             )
 
-            # Fluxo para finalizar bulto com SKU '3000000000000'
+            # Fluxo para finalizar bulto com SKU '3000000000000' (quantidade de linhas igual ao digitado)
             if st.session_state.get("finalizar_bulto_aguardando_3000000000000", False):
                 st.markdown('<div class="enviando-msg-idlog">Finalizando Bulto com SKU 3000000000000...<br>Por favor, aguarde!</div>', unsafe_allow_html=True)
                 with st.spinner("Salvando bulto na planilha, aguarde..."):
                     time.sleep(0.7)
                     if quantidade and quantidade > 0:
                         bulto_atual = st.session_state["bulto_numero"]
-                        cadastro_3000000000000 = {
-                            "Usuário": st.session_state["user_name"],
-                            "Bulto": bulto_atual,
-                            "SKU": "3000000000000",
-                            "Categoria": st.session_state["categoria_selecionada"],
-                            "Quantidade": int(quantidade),
-                            "Data/Hora": hora_brasil()
-                        }
-                        df_cadastros = pd.DataFrame([cadastro_3000000000000])
+                        linhas = []
+                        for i in range(int(quantidade)):
+                            cadastro_3000000000000 = {
+                                "Usuário": st.session_state["user_name"],
+                                "Bulto": bulto_atual,
+                                "SKU": "3000000000000",
+                                "Categoria": st.session_state["categoria_selecionada"],
+                                "Quantidade": 1,
+                                "Data/Hora": hora_brasil()
+                            }
+                            linhas.append(cadastro_3000000000000)
+                        df_cadastros = pd.DataFrame(linhas)
                         sucesso = salvar_bulto_na_planilha(df_cadastros)
                         if sucesso:
-                            st.success("✅ Bulto finalizado e salvo na planilha com SKU 3000000000000!")
+                            st.success(f"✅ Bulto finalizado e salvo na planilha com {quantidade} linhas (SKU 3000000000000)!")
                             st.session_state["cadastros"] = []
                         else:
                             st.error("❌ Erro ao salvar o bulto na planilha.")
