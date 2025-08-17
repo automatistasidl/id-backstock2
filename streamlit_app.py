@@ -391,22 +391,9 @@ if selecao == "Cadastro Bulto":
             )
             auto_focus_input("Digite a quantidade de peças...")
 
-            # Botão padrão para cadastrar quantidade SEM SKU INTERNO
-            if st.button("Cadastrar Quantidade", key="cadastrar_quantidade", use_container_width=True, disabled=not (quantidade and quantidade > 0)):
-                novo_cadastro = {
-                    "Usuário": st.session_state["user_name"],
-                    "Bulto": st.session_state["bulto_numero"],
-                    "SKU": "SEM SKU INTERNO",
-                    "Categoria": st.session_state["categoria_selecionada"],
-                    "Quantidade": int(quantidade),
-                    "Data/Hora": hora_brasil()
-                }
-                st.session_state["cadastros"].append(novo_cadastro)
-                st.success(f"{quantidade} peça(s) cadastrada(s) com sucesso!")
-                st.session_state["peca_reset_count"] = st.session_state.get("peca_reset_count", 0) + int(quantidade)
-                st.rerun()
+            # RETIRADO O BOTÃO "Cadastrar Quantidade"!
+            # Só existe o botão de finalizar bulto para esta categoria
 
-            # NOVO BOTÃO: Finalizar bulto com SKU '3000000000000', cada linha separada
             def bloquear_finalizar_bulto_tara_maior():
                 st.session_state["finalizar_bulto_disabled"] = True
                 st.session_state["finalizar_bulto_aguardando_3000000000000"] = True
@@ -427,7 +414,7 @@ if selecao == "Cadastro Bulto":
                     time.sleep(0.7)
                     if quantidade and quantidade > 0:
                         bulto_atual = st.session_state["bulto_numero"]
-                        data_hora = hora_brasil()  # <-- UMA VEZ SÓ!
+                        data_hora = hora_brasil()
                         linhas = []
                         for i in range(int(quantidade)):
                             cadastro_3000000000000 = {
@@ -453,44 +440,6 @@ if selecao == "Cadastro Bulto":
                     st.session_state.etapa = "bulto"
                     st.session_state["finalizar_bulto_aguardando_3000000000000"] = False
                     st.session_state["finalizar_bulto_disabled"] = False
-                st.rerun()
-
-            # Finalizar bulto padrão (SEM SKU INTERNO) permanece igual
-            def bloquear_finalizar_bulto_qtd():
-                st.session_state["finalizar_bulto_disabled"] = True
-                st.session_state["finalizar_bulto_aguardando"] = True
-
-            st.button(
-                "✅ Finalizar Bulto",
-                key="finalizar_bulto_qtd",
-                use_container_width=True,
-                type="primary",
-                disabled=st.session_state.get("finalizar_bulto_disabled", False),
-                on_click=bloquear_finalizar_bulto_qtd
-            )
-
-            if st.session_state.get("finalizar_bulto_aguardando", False):
-                st.markdown('<div class="enviando-msg-idlog">Finalizando Bulto...<br>Por favor, aguarde!</div>', unsafe_allow_html=True)
-                with st.spinner("Salvando bulto na planilha, aguarde..."):
-                    time.sleep(0.7)
-                    if st.session_state.get("peca_reset_count", 0) > 0:
-                        bulto_atual = st.session_state["bulto_numero"]
-                        df_cadastros = pd.DataFrame([c for c in st.session_state["cadastros"] if c["Bulto"] == bulto_atual])
-                        if not df_cadastros.empty:
-                            sucesso = salvar_bulto_na_planilha(df_cadastros)
-                            if sucesso:
-                                st.success("✅ Bulto finalizado e salvo na planilha com sucesso!")
-                                st.session_state["cadastros"] = []
-                            else:
-                                st.error("❌ Erro ao salvar o bulto na planilha.")
-                        else:
-                            st.warning("⚠️ Nenhuma peça cadastrada neste bulto para envio.")
-                    else:
-                        st.warning("⚠️ Nenhuma peça cadastrada neste bulto.")
-                    st.session_state["bulto_cadastrado"] = False
-                    st.session_state["peca_reset_count"] = 0
-                    st.session_state.etapa = "bulto"
-                    st.session_state["finalizar_bulto_aguardando"] = False
                 st.rerun()
         else:
             # Caso no futuro outras categorias usem essa etapa,
