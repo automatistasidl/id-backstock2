@@ -43,7 +43,7 @@ def load_backstock_data():
 
 def salvar_bulto_na_planilha(df_bulto):
     # Garante que só as colunas corretas vão para a planilha
-    expected_columns = ["Usuário", "Bulto", "SKU", "Categoria", "Quantidade", "Data/Hora"]
+    expected_columns = ["Usuário", "Bulto", "SKU", "Categoria", "Data/Hora"]
     df_bulto = df_bulto.loc[:, expected_columns]
     try:
         spreadsheet = get_google_sheet()
@@ -403,7 +403,7 @@ if selecao == "Cadastro Bulto":
                 st.session_state["finalizar_bulto_aguardando_3000000000000"] = True
 
             st.button(
-                "✅ Finalizar Bulto (SKU: 3000000000000)",
+                "✅ Finalizar Bulto",
                 key="finalizar_bulto_sku_3000000000000",
                 use_container_width=True,
                 type="primary",
@@ -426,7 +426,6 @@ if selecao == "Cadastro Bulto":
                                 "Bulto": bulto_atual,
                                 "SKU": "3000000000000",
                                 "Categoria": st.session_state["categoria_selecionada"],
-                                "Quantidade": 1,
                                 "Data/Hora": data_hora
                             }
                             linhas.append(cadastro_3000000000000)
