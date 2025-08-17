@@ -280,11 +280,11 @@ if selecao == "Cadastro Bulto":
         st.markdown(f"<div class='big-font'>Bulto: {st.session_state['bulto_numero']}</div>", unsafe_allow_html=True)
         categorias = [
             "Ubicação",
-            "Limpeza",
+            "Reetiquetagem",
             "Tara maior - Não recuperável",
             "Tara maior - sem SKU Interno",
             "Costura",
-            "Reetiquetagem"
+            "Limpeza"
         ]
         cols = st.columns(2)
         for i, categoria in enumerate(categorias):
