@@ -430,7 +430,7 @@ if selecao == "Cadastro Bulto":
                             }
                             linhas.append(cadastro_3000000000000)
                         df_cadastros = pd.DataFrame(linhas)
-                        expected_columns = ["Usuário", "Bulto", "SKU", "Categoria", "Quantidade", "Data/Hora"]
+                        expected_columns = ["Usuário", "Bulto", "SKU", "Categoria", "Data/Hora"]
                         df_cadastros = df_cadastros.loc[:, expected_columns]
                         sucesso = salvar_bulto_na_planilha(df_cadastros)
                         if sucesso:
