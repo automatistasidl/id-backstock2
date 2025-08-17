@@ -56,8 +56,8 @@ def salvar_bulto_na_planilha(df_bulto):
         if not existing_rows:
             sheet.append_row(expected_columns)
         rows = df_bulto.values.tolist()
-        for row in rows:
-            sheet.append_row(row)
+        if rows:
+            sheet.append_rows(rows)  # <- ENVIA TODAS AS LINHAS DE UMA VEZ
         return True
     except Exception as e:
         st.error(f"Erro ao salvar na planilha: {e}")
