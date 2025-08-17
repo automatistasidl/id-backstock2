@@ -427,6 +427,7 @@ if selecao == "Cadastro Bulto":
                     time.sleep(0.7)
                     if quantidade and quantidade > 0:
                         bulto_atual = st.session_state["bulto_numero"]
+                        data_hora = hora_brasil()  # <-- UMA VEZ SÓ!
                         linhas = []
                         for i in range(int(quantidade)):
                             cadastro_3000000000000 = {
@@ -435,7 +436,7 @@ if selecao == "Cadastro Bulto":
                                 "SKU": "3000000000000",
                                 "Categoria": st.session_state["categoria_selecionada"],
                                 "Quantidade": 1,
-                                "Data/Hora": hora_brasil()
+                                "Data/Hora": data_hora
                             }
                             linhas.append(cadastro_3000000000000)
                         df_cadastros = pd.DataFrame(linhas)
