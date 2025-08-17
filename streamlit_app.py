@@ -42,16 +42,19 @@ def load_backstock_data():
         return pd.DataFrame()
 
 def salvar_bulto_na_planilha(df_bulto):
+    # Garante que só as colunas corretas vão para a planilha
+    expected_columns = ["Usuário", "Bulto", "SKU", "Categoria", "Quantidade", "Data/Hora"]
+    df_bulto = df_bulto.loc[:, expected_columns]
     try:
         spreadsheet = get_google_sheet()
         try:
             sheet = spreadsheet.worksheet(SHEET_NAME)
         except gspread.WorksheetNotFound:
             sheet = spreadsheet.add_worksheet(title=SHEET_NAME, rows="1000", cols="20")
-            sheet.append_row(list(df_bulto.columns))  # Cabeçalho
+            sheet.append_row(expected_columns)  # Cabeçalho
         existing_rows = sheet.get_all_values()
         if not existing_rows:
-            sheet.append_row(list(df_bulto.columns))
+            sheet.append_row(expected_columns)
         rows = df_bulto.values.tolist()
         for row in rows:
             sheet.append_row(row)
@@ -350,6 +353,10 @@ if selecao == "Cadastro Bulto":
                 if st.session_state.get("peca_reset_count", 0) > 0:
                     bulto_atual = st.session_state["bulto_numero"]
                     df_cadastros = pd.DataFrame([c for c in st.session_state["cadastros"] if c["Bulto"] == bulto_atual])
+                    expected_columns = ["Usuário", "Bulto", "SKU", "Categoria", "Data/Hora"]
+                    if "Quantidade" in df_cadastros.columns:
+                        expected_columns.insert(4, "Quantidade")
+                    df_cadastros = df_cadastros.loc[:, expected_columns]
                     if not df_cadastros.empty:
                         sucesso = salvar_bulto_na_planilha(df_cadastros)
                         if sucesso:
@@ -391,8 +398,6 @@ if selecao == "Cadastro Bulto":
             )
             auto_focus_input("Digite a quantidade de peças...")
 
-            # Só existe o botão de finalizar bulto para esta categoria
-
             def bloquear_finalizar_bulto_tara_maior():
                 st.session_state["finalizar_bulto_disabled"] = True
                 st.session_state["finalizar_bulto_aguardando_3000000000000"] = True
@@ -426,8 +431,8 @@ if selecao == "Cadastro Bulto":
                             }
                             linhas.append(cadastro_3000000000000)
                         df_cadastros = pd.DataFrame(linhas)
-                        # Remove colunas extras do DataFrame se existirem
-                        df_cadastros = df_cadastros.loc[:, ["Usuário", "Bulto", "SKU", "Categoria", "Quantidade", "Data/Hora"]]
+                        expected_columns = ["Usuário", "Bulto", "SKU", "Categoria", "Quantidade", "Data/Hora"]
+                        df_cadastros = df_cadastros.loc[:, expected_columns]
                         sucesso = salvar_bulto_na_planilha(df_cadastros)
                         if sucesso:
                             st.success(f"✅ Bulto finalizado e salvo na planilha com {quantidade} linhas (SKU 3000000000000)!")
@@ -478,7 +483,6 @@ elif selecao == "Visualizar Planilha":
             df["Data/Hora_dt"] = pd.to_datetime(df["Data/Hora"], dayfirst=True, errors="coerce")
             df = df[~df["Data/Hora_dt"].isna()]
             df = df.sort_values("Data/Hora_dt", ascending=False)
-            # Remover coluna auxiliar antes de mostrar:
             df = df.drop(columns=["Data/Hora_dt"])
         st.subheader("Filtros")
         col1, col2, col3, col4 = st.columns(4)
