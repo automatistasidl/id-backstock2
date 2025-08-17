@@ -391,7 +391,6 @@ if selecao == "Cadastro Bulto":
             )
             auto_focus_input("Digite a quantidade de peças...")
 
-            # RETIRADO O BOTÃO "Cadastrar Quantidade"!
             # Só existe o botão de finalizar bulto para esta categoria
 
             def bloquear_finalizar_bulto_tara_maior():
@@ -427,6 +426,8 @@ if selecao == "Cadastro Bulto":
                             }
                             linhas.append(cadastro_3000000000000)
                         df_cadastros = pd.DataFrame(linhas)
+                        # Remove colunas extras do DataFrame se existirem
+                        df_cadastros = df_cadastros.loc[:, ["Usuário", "Bulto", "SKU", "Categoria", "Quantidade", "Data/Hora"]]
                         sucesso = salvar_bulto_na_planilha(df_cadastros)
                         if sucesso:
                             st.success(f"✅ Bulto finalizado e salvo na planilha com {quantidade} linhas (SKU 3000000000000)!")
@@ -477,6 +478,8 @@ elif selecao == "Visualizar Planilha":
             df["Data/Hora_dt"] = pd.to_datetime(df["Data/Hora"], dayfirst=True, errors="coerce")
             df = df[~df["Data/Hora_dt"].isna()]
             df = df.sort_values("Data/Hora_dt", ascending=False)
+            # Remover coluna auxiliar antes de mostrar:
+            df = df.drop(columns=["Data/Hora_dt"])
         st.subheader("Filtros")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
